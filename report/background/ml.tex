@@ -1,0 +1,68 @@
+
+
+\subsection{Machine Learning in Sports Analytics}
+The introduction of \textit{Machine Learning} has been a turning point in human history. It has completely changed the approach and mindset in multiple fields and has made us reach new limits. Instead of the traditional method of developing programs to do specific tasks,  \textit{Machine Learning} models are trained to learn from sample data and identify patterns which in turn can be applied on unseen data. The field of study, Machine Learning, obtains this by using statistical algorithms.
+
+In the context of sports analytics, the integration of \textit{Machine Learning (ML)} has transformed traditional approaches of simple metrics to advanced insights such as performance evaluation and strategy development. By leveraging large datasets and powerful predictive models, \textit{ML} provides granular insights into player behaviour, team tactics, and game dynamics.
+
+In comparison to previous statistical methods, \textit{ML} models excel in handling complex, high-dimensional data. Techniques such as supervised learning, unsupervised clustering, and reinforcement learning have found diverse applications within sports. For instance, supervised models are frequently employed to classify player movements or even predict the outcomes of matches based on previous performance metrics \cite{bunker2017machine}.
+
+Specifically for player tracking and analysis, computer vision techniques are often underpinned by \textit{deep learning architectures} such as CNNs. Not only do these systems significantly reduce the manual labour involved in annotating sports videos, but also result in a higher accuracy in dynamic and occluded environments \cite{cioppa2020multi}.
+
+On the other hand, \textit{clustering algorithms}, such as \textit{K-Means} and \textit{DBSCAN}, are used for player-segmentation based on spatial data collected during matches. These algorithms reveal formation patterns and strategies that would have otherwise been difficult to discern manually \cite{perin2013soccerstories}.
+
+In addition, \textit{reinforcement learning} has also been applied to simulate and optimize decision-making in sports. This has allowed for the development of AI agents that learn to play games at or above human levels \cite{silver2016mastering}. These agents provide great insights in the sport and in turn keep the sport growing.
+
+The overall impact of \textit{Machine Learning} extends beyond just the above mentioned applications. It increases engagement of fans and produces more interesting broadcasting.  The ability to generate personalized highlights, predictive commentary, and even augmented reality experiences has created more interest in the game. As the field continues to grow, the combination of domain expertise with cutting-edge \textit{ML} techniques continues to unlock deeper, data-driven insights into the sport of football.
+
+\subsection{Convolutional Neural Networks (CNNs)}
+Within the domain of \textit{Machine Learning}, \textit{Convolutional Neural Networks (CNNs)} are a fundamental architecture designed specifically for the analysis of visual data. Originally inspired by the structure of the brain, \textit{CNNs} have become the backbone of numerous applications, including object detection, segmentation, and video analysis. To further understand the system, it is crucial to understand what a \textit{convolutional Neural Network} is and its functionality.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/cnn.png}
+    \caption{convolutional Neural Network Architecture \cite{cnnimg}.}
+    \label{fig:cnn}
+\end{figure}
+
+The common architecture of a \textit{CNN} can be seen in Figure~\ref{fig:cnn}. The CNNs typically consist of different layers, each having a role to play:
+\begin{enumerate} 
+    \item \textbf{Convolutional Layers:} It is in these layers where the main processing of the \textit{CNNs} occurs. The convolutional layers apply a set of filters to the input data. The filters are small matrices that in turn produce \textit{feature maps} that capture different levels of information. As the layer depth increases, the complexity of the image features captured increases\cite{CNNIntro}.
+
+    \item \textbf{Pooling Layers}: Following the convolutional layers, pooling layers are employed to progressively reduce the dimensions of the representation and discard the data that is trivial or insignificant. This in turn reduces the total computation in the network and prevents over-fitting of the model.     
+    There are two commonly used pooling layers:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/pooling.png}
+        \caption{Pooling Methods \cite{poolingImg}.}
+        \label{fig:pooling}
+    \end{figure}
+    \paragraph{(a) Max Pooling}: In max-pooling, the maximum value from each sub-region covered by the filter is taken. This provides translation invariance and improves the computational efficiency.
+    \paragraph{(b) Average Pooling:} In average pooling, the down-sampling is done by taking a rectangular sub-region covered by the filter, and taking the average of it
+    \cite{poolingMethods}.
+    
+    
+    \item \textbf{Activation Functions:} Activation functions play an essential role. After the convolutional or fully connected layer computes its raw output, it is passed through an activation function. In some cases, the activation function causes a neuron to turn off or become inactive by converting its output to 0. However, as the functions do not change dimensionality of the network, they are often not shown in the architecture diagrams. Activation functions introduce non-linearity into the network, causing the network to be able to learn more complex patterns. The \textit{Rectified Linear Unit (ReLU)} is cuurently one of the most popular choice due to its ability to mitigate the vanishing gradient problem and accelerate convergence \cite{nair2010rectified}.
+    \[\text{ReLU}(x) = \max(0, x)\]
+    \\
+    The \textit{ReLU} functions converts all the values to positive real numbers.
+    Another alternative activation function is \textit{Softmax}. This function is generally used at \textit{Fully Connected Layers} when the output should be a probability distribution between 0 and 1 for classification purposes.
+    \[\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}\]
+    Several other activation functions can be seen in Figure~\ref{fig:activationFunctions}.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/activationFunctions.png}
+        \caption{Activation Functions \cite{activationImg}.}
+        \label{fig:activationFunctions}
+    \end{figure}
+    
+    \item \textbf{Fully Connected Layers:} At the final stage of the neural network, fully connected layers are used where each neuron is connected to all activations in the previous layer. This allows for the combination of spatially distributed features to make high-level predictions, such as the classification of an object or the detection of players within a frame. 
+\end{enumerate}
+% Old citations \cite{lecun1998gradient} \cite{goodfellow2016deep}.
+
+Training a CNN involves the key concept of \textit{back-propagation}. It evaluates the prediction it has made by comparing it with the ground truth. This comparison is done using a metric, here termed as \textit{loss function}. Therefore, the overall goal of the CNN is to minimize it. The most common loss function used is categorical cross-entropy for classification tasks\cite{crossEntropyLossFunction}.
+
+% via optimization techniques such as stochastic gradient descent (SGD) and its variants. 
+
+Advancements such as residual connections \cite{he2016deep} and depth-wise separable convolutions \cite{howard2017mobilenets} have further enhanced the performance of CNNs. This has allowed the construction of deeper and more efficient networks suitable for real-time sports analytics systems. The \textit{YOLO} families of models is an example of great significance and will be talked about in detail in Subsection~\ref{subsec:detection}. It's core structure consists of a \textit{convolutional Neural Network}.

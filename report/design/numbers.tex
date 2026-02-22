@@ -1,0 +1,62 @@
+\subsection{Tactical Analysis}
+
+The system adds another feature of tactical analysis. Tactical analysis provides great aid in understanding the game. It gives insights into the players individual performances and can identify key takeaways, one that might go unnoticed by the human eye. A thorough analysis of each frame is done and through this the multiple metrics are obtained.
+
+\subsubsection{Possession}
+The possession of the ball is determined by the proximity of the player to the ball. The player closest to the ball is said to be in possession of the ball, however, a maximum threshold value for the distance is applied. If distance between the ball and the closest player is larger than this, the player is not considered to be in possession of the ball. A threshold value was implemented as the ball can be in the air or even passed, and during the travel, the ball is said to be in no one's possession. 
+
+The apt value for the threshold value was determined to be \textbf{40px}, as it was calculated to be an equivalent of around 3 meters. In real life, if the ball was more than 3 meters away from the player, they would not be said to be in possession. This is very basic methodology, and they can be multiple instances where the player might be sprinting and the ball might exceed the threshold but still be in possession, however, this was generally found to be apt.
+
+This concept aided in two additional statistics; \textit{Team Possession Percentage} and \textit{Number of Passes}.
+
+Whenever a player was considered to be in the possession of the ball, it was recorded. Finally, after each and every frame has been examined, the overall possession percentage of each team was calculated using the following formula:
+\[
+P_{\text{team}} = \frac{F_{\text{team}}}{F_{\text{total}}} \times 100
+\]
+where:
+\begin{itemize}
+    \item $F_{\text{team}}$ is the total number of frames where a player from the team was recorded in possession,
+    \item $F_{\text{total}}$ is the total number of frames where any player was recorded in possession.
+\end{itemize}
+
+In a similar manner the \textit{number of passes by a team} was also estimated. If the possession of the ball changes, and the new player in possession is of the same team, it was considered as a \textbf{pass}. The number of passes completed by each team was recorded and displayed at the end. It is important to note here that this was a very simple method and does not take into consideration tackles and non-intentional passes.
+
+\subsubsection{Player Speed and Distance Coverage}
+To analyse the player performance, the speed and total distance covered by each player over the course of the match was calculated. This gave a great insight into the individual performance of players, a very helpful analysis for coaches. The instantaneous speed and total distance travelled was obtained by tracking the player's movements across frames in the 2D broadcast view. Each player's positional changes were computed using their coordinates extracted from the homography-transformed \textit{Top-Down View} of the pitch.
+camera perspectives and zoom levels in broadcast footage we normalized these positional changes 
+Given the variation in pitch sizes based on the location, an assumption was made. It was assumed that the pitch was an average real-world pitch dimension of $105 \times 68$ meters, in line with FIFA regulations for a standard football field. The scaling factor between image pixels and real-world meters was estimated based on the pitch corners identified through key-point detection and homography estimation.
+
+The distance $d$ travelled between two consecutive frames was calculated using the Euclidean distance formula:
+\[
+d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}
+\]
+where $(x_1, y_1)$ and $(x_2, y_2)$ are the coordinates of the player in successive frames, mapped to real-world coordinates.
+
+Cumulative distance for each player was then obtained by summing these per-frame distances across the entire match. The instantaneous speed $v$ of a player was estimated by:
+\[
+v = \frac{d}{\Delta t}
+\]
+where $\Delta t$ is the time interval between frames, determined using the video's frame rate (e.g., $\Delta t = \frac{1}{25}$ seconds for a 25 fps video).
+
+This methodology provides an overall reliable approximation of the player dynamics; enabling insights into the player workload, sprinting bursts, and positioning during different phases of the game.
+
+
+
+% \subsubsection{Video Processing Pipeline}
+
+% The system processes video frames in the following pipeline:
+
+% \begin{enumerate}
+%     \item Generate frames from video source using a stride.
+%     \item Apply object detection and tracking.
+%     \item Run team classification and pitch homography.
+%     \item Annotate each frame with tactical overlays.
+%     \item Write results to disk using \texttt{cv2.VideoWriter} or \texttt{supervision.VideoSink}.
+% \end{enumerate}
+
+% Different output streams are supported: raw detection overlays, top-down tactical views, Voronoi maps, offside visuals, and statistical overlays.
+
+% \bigskip
+
+% This modular and scalable pipeline ensures real-time feasibility, robustness to partial occlusion, and flexibility for integration into future tactical applications.
+

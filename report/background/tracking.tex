@@ -1,0 +1,114 @@
+\subsection{Player Tracking}
+\label{subsec:tracking}
+\subsubsection{Background and Evolution}
+
+Over the past decade, \textit{Multiple Object Tracking (MOT)} has seen a significant development, particularly within the sports video analytics industry. In the fields of sports, real-time and accurate tracking play a crucial role. One of the earliest and most influential \textit{MOT} algorithms was \textit{Simple Online and Real-time Tracking (SORT)}. Introduced by Bewley et al.~\cite{bewley2016simple} in 2016, \textit{SORT} combined Kalman filtering with the Hungarian algorithm to associate detections across frames in an effective manner. This paved the path for multiple other trackers in the future.
+
+Building on \textit{SORT}, \textit{DeepSORT} incorporated deep neural network based appearance features to make identity tracking more robust~\cite{wojke2017simple}. However, DeepSORT remained relatively complex and slower for real-time applications, especially on resource-constrained devices. This led to the development of \textbf{ByteTrack}~\cite{zhang2022bytetrack}, a lightweight and efficient tracker that leveraged low-confidence detections in a smart manner to improve the overall performance. Before delving into the functioning of ByteTrack, it is essential to understand the Kalman Filter and Hungarian Algorithm and the roles they play. The operational procedure is talked about after this.
+
+\paragraph{Kalman Filter for Motion Prediction.}
+The \textit{Kalman filter} is a recursive estimator used to predict the state of a dynamic system from a series of previous measurements. In the context of object tracking, it estimates the object's position and velocity across the video frames. 
+
+The filter operates in two main phases: 
+\\ \textit{\textbf{The prediction phase:}} This phase predicts the object's position in the current frame using the object 's positions in previous frames. It also estimates the object's velocity in a similar manner. If there is an object detected, it moves onto the next phase, else it records the object's position solely based on the prediction it has estimated.
+\\ \textit{\textbf{The update phase}}: Here, the estimated bounding box is corrected based on the newly found bounding box detection ~\cite{kalman1960new}. This results in a robust temporal smoothing, enabling ByteTrack to maintain object trajectories even through brief occlusions or missed detections.
+
+In ByteTrack, each tracked object is represented by a \textit{state vector} (typically including the position, velocity, scale, etc.) and a \textit{covariance matrix} representing the uncertainty of the state. The filter assumes constant velocity and linear motion, which is computationally efficient and sufficiently accurate for short-term tracking tasks in sports settings.
+
+\paragraph{Hungarian Algorithm for Data Association.}
+The Hungarian algorithm, also known as the \textit{Kuhn-Munkres algorithm}, is a combinatorial optimization method that solves the assignment problem in polynomial time~\cite{kuhn1955hungarian, munkres1957algorithms}. In tracking-by-detection systems like ByteTrack, it is used to find an association between the predicted object positions (from the Kalman filter) and the new detections in following frame.
+
+The algorithm uses a cost matrix to do this. The original algorithm was implemented to assign tasks to agents at an overall minimal cost, however, in this case, tasks and agents represent the \textit{Kalman filter} predicted detections and the actual detections from the next frame. The algorithm makes sure that each worker is assigned to only one task and no task has more than one worker, i.e. each prediction is associated to only one detection.
+
+
+\textbf{Step-by-Step Procedure}
+
+Let $C$ be an $n \times n$ cost matrix, where $C_{ij}$ represents the cost of assigning agent $i$ to task $j$.
+
+\begin{enumerate}[label=\textbf{Step \arabic*.}, wide=0pt, leftmargin=*]
+
+    \item \textbf{Row Reduction} \\
+    For each row in the cost matrix, subtract the smallest element in that row from every element of the row. This step ensures that each row has at least one zero.
+
+    \item \textbf{Column Reduction} \\
+    After the row reduction, perform a similar operation on each column: subtract the smallest element in the column from all entries in that column. Now every column also contains at least one zero.
+
+    \item \textbf{Cover All Zeros with a Minimum Number of Lines} \\
+    Cover all the zeros in the matrix using the minimum number of horizontal and vertical lines. If the minimum number of lines equals $n$, an optimal assignment can be made using only the zeros and we can skip the next step. If not, we will need to continue to Step 4.
+
+    \item \textbf{Adjust the Matrix} \\
+    Find the smallest element not covered by any line. Subtract this value from all of the uncovered elements. Then, add it to the elements that are covered twice (i.e., where a horizontal and vertical line intersect). Leave the rest of the matrix unchanged.
+
+    \item \textbf{Repeat Steps 3 and 4} \\
+    Go back to Step 3 with the adjusted matrix. Repeat the process until the minimum number of lines needed to cover all zeros is $n$.
+
+    \item \textbf{Make the Optimal Assignment} \\
+    Once the required number of lines is $n$, select a set of zeros such that no two selected zeros are in the same row or column. This forms the optimal assignment. If multiple zeros are in a row or column, use a method such as the maximum matching algorithm to choose a valid set.
+
+\end{enumerate}
+
+\textit{The Hungarian Algorithm} is known to guarantee an optimal solution to the assignment problem in $O(n^3)$ time. Its use of matrix transformations and systematic line-covering ensures that the cost is minimized without exhaustive search. If the association problem was solved by brute-force, it would create a complexity of $O(n!)$. This highlights the importance of the algorithm.
+
+
+
+
+
+% ByteTrack constructs a \textit{cost matrix} using Intersection over Union (IoU) between the predicted bounding boxes and detected boxes. The Hungarian algorithm then computes the optimal one-to-one assignment between the tracks and detections that minimizes the overall cost. This ensures that objects are correctly re-identified across frames, even in scenes with many moving players and significant occlusions; a common occurrence in the sport of football.
+
+% By combining the Kalman filter for robust prediction and the Hungarian algorithm for optimal assignment, ByteTrack inherits the efficiency and simplicity of SORT while offering improved tracking performance through confidence-aware matching.
+
+
+
+\subsubsection{How ByteTrack Works}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/byteTrackFlowChart.png}
+    \caption{Flowchart representing the ByteTrack tracking algorithm~\cite{bytetrackImg}.}
+    \label{fig:byteTrackFlowchart}
+\end{figure}
+
+\textbf{ByteTrack} enhances standard SORT by incorporating confidence thresholds and a two-stage association mechanism, called \textit{BYTE}. The algorithm's basic structure can be seen in Figure~\ref{fig:byteTrackFlowchart}. It proceeds through the following steps:
+
+\begin{enumerate}
+    \item \textbf{Detection Preprocessing}: 
+    Detections are split into 2: high-confidence and low-confidence groups. This split is based on two predefined confidence thresholds.  
+
+    \item \textbf{Prediction with Kalman Filter}: 
+    Each track predicts its new position using the \textit{Kalman filter}.
+
+    \item \textbf{Primary Association (High-Confidence)}:
+    \textit{The Hungarian algorithm} matches predictions with high-confidence detections with the aid of IoU and appearance.
+
+    \item \textbf{Secondary Association (Low-Confidence)}:
+    Remaining unmatched tracks are matched with low-confidence detections. It is important to note that in the secondary association, only the metric of IoU is used. This is due to the fact that low-confidence detections are generally caused due to occlusions on motion blurs and therefore cannot be associated based on appearance.
+
+    \item \textbf{Track Management}:
+    Tracklets are then finally updated or terminated based on their association results and their age. For example, if a tracklet has gone over 30 frames without having an association with a match, it is deleted.
+
+    \item \textbf{Sorted Matching Logic}:
+    Matches are prioritized by sorting detections and tracks by confidence.
+\end{enumerate}
+
+% \vspace{1em}
+% \begin{algorithm}[H]
+% \caption{ByteTrack Algorithm}
+% \KwIn{Detections $D_t$ for frame $t$, tracks $T_{t-1}$}
+% \KwOut{Updated tracks $T_t$}
+% \SetKwFunction{FMain}{ByteTrack}
+% \SetKwProg{Fn}{Function}{:}{}
+% \Fn{\FMain{$D_t, T_{t-1}$}}{
+%     Split $D_t$ into high-confidence ($D_h$) and low-confidence ($D_l$)\;
+%     Predict positions of $T_{t-1}$ using Kalman Filter $\rightarrow \hat{T}_t$\;
+%     Match $\hat{T}_t$ with $D_h$ using Hungarian algorithm (IoU cost)\;
+%     Update matched tracks; mark unmatched tracks as $U$\;
+%     Match $U$ with $D_l$ using Hungarian algorithm (IoU cost)\;
+%     Update matched tracks with low-confidence detections\;
+%     Initialize new tracks from unmatched high-confidence detections\;
+%     Remove tracks that exceed age threshold without matches\;
+%     \Return{$T_t$}
+% }
+% \end{algorithm}
+% \vspace{1em}
+
+By integrating both high-confidence and low-confidence detections, with the emphasis on strong matches first, ByteTrack effectively maintains track identities even during heavy occlusions and dense group movements. This makes it exceptionally well-suited for football analytics, where players often move closely together and visibility can vary rapidly.

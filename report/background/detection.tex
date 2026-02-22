@@ -1,0 +1,129 @@
+\subsection{Player Detection}
+\label{subsec:detection}
+
+\subsubsection{Background and Evolution}
+
+The \textit{YOLO} series of models have played a pivotal role in the advancement of real-time object detection. Introduced by Redmon et al. in 2015, \textit{YOLOv1} revolutionized object detection by framing it as a \textit{single regression problem}. This approach made real-time object detection a possibility and was a major turning point in the field~\cite{redmon2016you}. Following this, subsequent versions were made, each introducing different improvements to the model. YOLOv2 and YOLOv3, introduced improvements such as anchor boxes and multi-scale detection, whereas, YOLOv5, developed by \textit{Ultralytics}, further enhanced performance and usability~\cite{jiang2022review}.
+
+Based on this foundation, Ultralytics released the \textit{YOLOv8} model in January 2023. It integrates modern deep learning techniques to achieve state-of-the-art results in object detection, instance segmentation, and image classification tasks \cite{roboflow2024yolov8}.
+
+\subsubsection{Concept}
+
+As mentioned previously, the \textit{You Only Look Once (YOLO)} object detection model treats object detection as a \textbf{single regression problem}. Instead of scanning multiple regions of interest or using multi-stage proposals like Region-based Convolutional Neural Networks (\textit{R-CNN}) previously did \cite{rcnn}, YOLO directly maps image pixels to bounding box coordinates and class probabilities through a single convolutional neural network (CNN) forward pass. This single direct pass makes it ideal for time-sensitive applications such as live football analysis. 
+\textit{YOLO} models overall are built upon on two core components; \textit{localization} and \textit{classification}. Object localization is where the object's location in the image is detected. On the other hand, classification is the part where the detection object is assigned into a pre-defined class or given a label.
+
+The process the family of \textit{YOLO} models follow is described below.
+
+\paragraph{1. Grid Division and Anchor Prediction}
+
+The input image is firstly divided into an $S \times S$ grid. Each cell is responsible for detecting objects whose centres fall within it. For each grid cell, \textit{YOLO} encodes a vector:
+\[
+\mathbf{v} = \left[ p_c, \, b_x, \, b_y, \, b_w, \, b_h, \, c_1, \, c_2, \, \ldots, \, c_i \right]
+\]
+\begin{itemize}
+    \item $B$ bounding boxes are predicted, each with its own:
+        \begin{itemize}
+            \item Probability of an object $p_c$ in that cell,
+            \item Centre coordinates $(b_x, b_y)$ of an object if detected (relative to the grid cell),
+            \item Width $b_w$ and height $b_h$ of an object if detected (relative to the entire image).
+        \end{itemize}
+    \item $C$ class probabilities are predicted, representing $\Pr(\text{Class}_i \mid \text{Object})$.
+\end{itemize}
+There does stand a possibility wherein cells contain the centre of more that one object, in this case it is stored as follows:
+\[
+\text{Predictions per cell} = \left\{ \mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_B \right\}
+\]
+
+\paragraph{2. Intersection over Union (IoU)}
+
+The \textit{IoU} metric measures the overlap between the predicted and ground truth bounding boxes:
+\[
+\text{IoU} = \frac{\text{Area of Overlap}}{\text{Area of Union}}
+\]
+Where:
+\begin{itemize}
+    \item \textbf{Area of Overlap} is the intersected area of the predicted and actual boxes,
+    \item \textbf{Area of Union} is the combined area covered by both boxes.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/iou.png}
+    \caption{Visual Representation of IoU \cite{IoUimg}.}
+    \label{fig:IoU}
+\end{figure}
+
+
+The IoU ranges between 1 and 0 where an IoU close to 1 indicates a strong match and vice-versa.
+
+\paragraph{3. Non-Maximum Suppression (NMS)}
+
+\textit{YOLO} typically predicts multiple boxes for the same object. To eliminate redundancy, \textit{Non-Maximum Suppression (NMS)} plays a key role:
+\begin{enumerate}
+    \item Sort all predicted boxes by their confidence scores.
+    \item Select the box with the highest score as the reference.
+    \item Suppress all other boxes with an IoU greater than a chosen threshold (e.g., 0.5) with the reference. This ensures that the bounding boxes for other objects are not suppressed as well. 
+    \item Repeat the process for the remaining boxes in the sorted order.
+\end{enumerate}
+
+\paragraph{4. Confidence Score Calculation}
+By combining all the previously obtained values for each predicted bounding box, a final class-specific confidence score is calculated using the following formula:
+\[
+\text{score}_{\text{class}_i} = \Pr(\text{Object}) \times \text{IoU}_{\text{truth, pred}} \times \Pr(\text{Class}_i \mid \text{Object})
+\]
+This score combines the probability of an object being present with how well the predicted box overlaps with the ground truth (via IoU), and the probability of the object belonging to class $i$.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/yologrid.png}
+    \caption{YOLO Object Detection and Classification Procedure \cite{redmon2016you}.}
+    \label{fig:yolosteps}
+\end{figure}
+
+As shown in Figure~\ref{fig:yolosteps}, the final output is obtained.
+
+\paragraph{Application in Football}
+
+In the context of football, \textit{YOLO} is trained to detect players, referees, the ball, the pitch, and potentially other entities (e.g., goalposts). Its single-shot efficiency makes it suitable for frame-by-frame video processing. Non-Maximum Suppression (NMS) plays a crucial role when players are tightly clustered or partially occluded, ensuring clean, non-redundant detections even in dense match scenarios.
+
+
+
+\subsubsection{YOLOv8 Architecture and Functionality}
+
+YOLOv8's architecture comprises three primary parts: the Backbone, Neck, and Head as shown in Figure~\ref{fig:architecture}. Note, some experts do consider the neck to be part of the head, however, for explanatory purposes, they have been considered as separate parts.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/yolo_architecture.png}
+    \caption{YOLOv8 Model Architecture \cite{YOLOv8img}.}
+    \label{fig:architecture}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Backbone}: The Backbone is responsible for extracting rich feature representations from the input images. To obtain this, YOLOv8 employs a modified version of the \textit{Cross Stage Partial Network (CSPNet)} known as \textit{CSPDarknet53} which was first introduced in \textit{YOLOv4}\cite{yolov4}. This overall design enables the model to capture both low-level and high-level features in a rather effective manner, resulting in accurate object detections across a variety of scales \cite{yaseen2024yolov8}.
+
+    \item \textbf{Neck}: The Neck aggregates features from different stages of the Backbone to construct a feature pyramid. YOLOv8 uses a combination of a \textit{Feature Pyramid Network (FPN)} and a \textit{Path Aggregation Network (PAN)} structure to improve the detection performance across multiple object sizes \cite{yaseen2024yolov8}\cite{YOLOv8img}.
+
+    \item \textbf{Head}: The Head predicts the bounding boxes, object scores, and class probabilities. Notably, YOLOv8 introduces an anchor-free detection mechanism that predicts object centres and dimensions directly. This approach simplifies training and improves generalization across different object sizes and shapes \cite{roboflow2024yolov8}.
+\end{itemize}
+
+
+
+\subsubsection{YOLOv8 Training Enhancements}
+
+YOLOv8 not only showcases an improvement in model the architecture, but also incorporates several training strategies to boost performance:
+
+\begin{itemize}
+    \item \textbf{Mosaic Augmentation}: Stitches four images into one during training, exposing the model to varied contexts and object scales, which improves robustness. However, it was seen that mosaic augmentation overall decreased the model performance if used throughout training. Instead, if used only in the last 10 epochs, it yields a significant improvement.
+    \item \textbf{Adaptive Image Scaling}: Adjusts the input image sizes dynamically during training. This aids the model in learning scale-invariant features as well.
+    \item \textbf{Label Smoothing}: Applies a small amount of noise to labels during the training, preventing the model from becoming overconfident and enhancing generalization.
+\end{itemize}
+
+% \subsubsection{Performance Metrics}
+
+% YOLOv8 demonstrates impressive performance on standard benchmarks. For instance, the YOLOv8m model achieves a mean Average Precision (mAP) of 50.2\% on the COCO dataset, outperforming previous YOLO versions in both accuracy and inference speed \cite{roboflow2024yolov8}.
+
+
+
+In summary, YOLOv8 represents a significant leap forward in real-time object detection. By combining architectural innovations with practical enhancements, it delivers a powerful and user-friendly tool for multiple computer vision applications, playing a key role in sports analytics.

@@ -1,0 +1,23 @@
+\subsection{Pitch Homography and Spatial Mapping}
+
+
+The \textit{Top-Down View}, also known as \textit{Bird's Eye View}, is crucial in the field of football analytics. It provides a concise and comprehensive spatial awareness of every player on the pitch simultaneously. Unlike broadcast footage focused on either the ball or individual confrontations, an overhead view enables analysts to evaluate team formations, spacing, player positioning, and tactical movements in real-time. This view is necessary for the proper evaluation of strategies like pressing formations, defensive lines, and attacking patterns, in addition to quantifying measurements such as team compactness, pitch control, and passing options. Ultimately, the \textit{Top-Down View} converts the raw video footage into actionable insights, rendering it indispensable for high-level performance analysis and coaching decisions.
+
+As mentioned earlier, a \textit{Key-point Detection Model} detects the pitch key-points. Using the coordinates obtained, a homography matrix is computed using the custom \texttt{ViewTransformer} class to convert between the frame and pitch coordinates. For computation of a homography matrix, a minimum of \textbf{4 points} need to have been detected as explained in Section~\ref{subsec:homography}. Using the \textit{homography matrix}, the key-points are mapped to a known field template obtained from the \texttt{supervision} package (\texttt{SoccerPitchConfiguration}).
+
+This template can be seen in Figure~\ref{fig:2DPitch}. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/2DPitch.png}
+    \caption{Pitch Template}
+    \label{fig:2DPitch}
+\end{figure}
+
+This transformation plays a crucial role, enabling:
+\begin{itemize}
+    \item Top-down projections of the player and ball positions.
+    \item Overlaying analytical graphics like offside lines and Voronoi diagrams on the pitch.
+    \item Generation of metrics such as player instantaneous speed, cumulative distance, ball possession, and number of passes.
+\end{itemize}
+

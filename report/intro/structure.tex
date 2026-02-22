@@ -1,0 +1,52 @@
+\subsection{Report Structure}
+This report outlines the development of a comprehensive football video analytics system that integrates player detection, tracking, team classification, spatial analysis, and tactical analysis. The report is structured as follows:
+
+\begin{enumerate}
+    \item \textbf{Chapter 1: Introduction} \\
+    The introduction chapter introduces the project and the motivation behind this project. It outlines the aims and key objectives as well, and provides a brief description of the structure of the report.
+
+    \item \textbf{Chapter 2: Background} \\
+    This chapter reviews prior work in the areas of sports analytics, object detection, multi-object tracking, team classification, pitch homography, and spatial analysis. It further delves into the theoretical foundations of concepts and algorithms used in the project.
+
+    \item \textbf{Chapter 3: Design}
+    \begin{itemize}
+        \item \textbf{3.1 System Architecture Overview} \\
+        High-level pipeline: object detection $\rightarrow$ tracking $\rightarrow$ classification $\rightarrow$ homography $\rightarrow$ analytics.
+        
+        \item \textbf{3.2 Data Collection and Annotation} \\
+        Describes the dataset, annotation tools (e.g., Roboflow), and labelling schema.
+
+        \item \textbf{3.3 Object Detection} \\
+        Details the YOLO model fine-tuning process and its usage for player, referee, ball, and pitch detection.
+
+        \item \textbf{3.4 Multi-Object Tracking} \\
+        Explains the choice of ByteTrack for identity tracking and how it integrates with detection.
+
+        \item \textbf{3.5 Team Classification} \\
+        Discusses the use of deep embeddings (e.g., SigLIP), clustering (UMAP + K-Means), and team assignment.
+
+        \item \textbf{3.6 Pitch Homography} \\
+        Describes the projection of the frame coordinates to a top-down view using homography.
+
+        \item \textbf{3.7 Spatial and Tactical Analysis} \\
+        Includes analysis modules like ball possession estimation, offside detection, Voronoi diagram generation, player speed and distance tracking, and pass detection.
+    \end{itemize}
+
+    % \item \textbf{Chapter 4: Implementation} \\
+    % Covers the software tools and platforms (e.g., PyTorch, OpenCV, Roboflow), modular code design, and any user interface or visualization frameworks used.
+
+    \item \textbf{Chapter 4: Evaluation and Results} \\
+    Presents both qualitative and quantitative evaluation of the overall system: mAP scores, tracking metrics, clustering accuracy, and visual results.
+
+    % \item \textbf{Chapter 6: Discussion} \\
+    % Reflects on the system's performance, discusses key achievements, limitations, and implications for real-world deployment.
+
+    \item \textbf{Chapter 5: Conclusion} \\
+    Summarizes the key outcomes, reiterates the contributions, and comments on the impact of the work. Explores potential improvements such as integrating transformer-based models, enhancing re-identification, and real-time system deployment.
+
+    \item \textbf{References} \\
+    All cited works are listed.
+
+    % \item \textbf{Appendices} \\
+    % Includes supplementary materials such as full code listings, additional figures, evaluation logs, annotation examples, and system instructions.
+\end{enumerate}

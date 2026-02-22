@@ -1,0 +1,151 @@
+% \subsection{Data Collection}
+% The data upon which the YOLO Model is fine-tuned plays a crucial role in the final product. The data used was 
+
+\subsection{Data Collection}
+
+To train and evaluate the models used in this project, a publicly available dataset of professional football video footage was utilized. Specifically, the ``DFL Bundesliga - 460 MP4 Videos in 30sec CSV'' dataset from Kaggle was selected due to its extensive collection of broadcast-quality match segments, each approximately 30 seconds in duration. The dataset contains over 460 MP4 videos covering Bundesliga matches, along with CSV metadata files providing additional context \cite{BundesligaVideos}. Furthermore, a previously annotated datasets available on ROBOFLOW under \href {https://creativecommons.org/licenses/by/4.0/}{CC By 4.0} was also used for additional data \cite{detectionDataset}.
+
+For the pitch key-point detection model, a data set available on ROBOFLOW was used \cite{pitchDataset} which is also under \href {https://creativecommons.org/licenses/by/4.0/}{CC By 4.0}. 
+
+\subsection{Player \& Ball Data}
+\subsubsection{Data Annotation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/playerLabelling.png}
+    \caption{Sample labelling done using Roboflow.}
+    \label{fig:playerLabelling}
+\end{figure} 
+
+The data obtained from Kaggle required precise and detailed labelling to ensure accurate model performance. To achieve this, we (Abbas Sakauloo, Jamie Li, Maanav Chauhan, and Steven Moussa) manually annotated each player and the ball using the Roboflow platform, resulting in a high-quality dataset of over 700 annotated images. This collaborative effort ensured consistency and accuracy across the dataset, which was crucial for the success of the object detection and tracking pipeline. A sample of the annotation of the ball, players, referees and goalkeepers can be seen in Figure~\ref{fig:playerLabelling}.
+
+
+
+
+\subsubsection{Data Preprocessing and Augmentation}
+
+Prior to training, the raw dataset underwent a comprehensive preprocessing and augmentation pipeline designed to improve the model's robustness, reduce over-fitting, and simulate real-world conditions in football video analysis.
+
+\subsubsection*{Preprocessing}
+
+\begin{itemize}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.45\linewidth]{images/plain.png}
+        \includegraphics[height=0.45\linewidth]{images/square.png}
+        \caption{Preprocessing example.}
+        \label{fig:preprocessing}
+    \end{figure}
+    \item \textbf{Resizing to ($1280\times1280$)}: All images were resized to a uniform resolution of $1280\times1280$ pixels. The preprocessing provides a standardizing of the input dimensions. This is essential for batch processing in deep learning as it ensures that the model receives consistent input dimensions across all training samples. This helps in batch processing. Rectangular input is possible, however, this can introduce inconsistencies and in turn would require extra computational resources. 
+    
+    The reasoning behind this particular resolution was the football's detection. Under smaller resolutions like $640\times640$, the ball's detection becomes even harder. This resolution strikes a key balance between preserving detail and managing GPU memory constraints.
+\end{itemize}
+
+\subsubsection*{Augmentations}
+
+Each training example was augmented to produce multiple distinct outputs. Augmentation helps simulate a variety of real-world camera conditions and player movements, encouraging the model to generalize better. Augmentation of images also increases the size of the dataset and reduces over-fitting. The following transformations were applied:
+
+\begin{itemize}
+    \item \textbf{Rotation (-10° to +10°)}: This simulates changes in the camera angle and player orientation. This is particularly important in football videos where both camera and player movement can introduce rotational variance.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{images/rotation.png}
+    \includegraphics[width=0.35\linewidth]{images/rotation2.png}
+    \caption{Data augmentation examples using rotation.}
+    \label{fig:rotation}
+    \end{figure}
+    
+
+    \item \textbf{Shear (±10° Horizontal/Vertical)}: This introduces affine distortions to simulate oblique camera views or slight perspective shifts, helping the model become more invariant to viewpoint distortions. This is of great importance as the camera can move frequently during the match and cause different perspectives.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[height=0.34\linewidth]{shear.png}
+    \includegraphics[height=0.34\linewidth]{shear2.png} \\
+    \includegraphics[height=0.34\linewidth]{shear3.png}
+    \includegraphics[height=0.34\linewidth]{shear4.png}
+    \caption{Data augmentation examples using shear transformation.}
+    \label{fig:shear_aug}
+\end{figure}
+
+    % \item \textbf{Exposure Adjustment (-10\% to +10\%)}: Alters the vividness of colours, mimicking differences in lighting conditions across various stadiums or different times of the day.
+    
+
+    \item \textbf{Brightness Adjustment (-15\% to +15\%)} and \textbf{Exposure (-10\% to +10\%)}: These simulate overexposed or underexposed frames due to camera settings or the environmental lighting, enabling the model to remain robust even under suboptimal lighting.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{brightness.png}
+    \includegraphics[width=0.35\linewidth]{brightness2.png}
+    \caption{Data augmentation examples using brightness adjustment.}
+    \label{fig:brightness_aug}
+    \end{figure}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{exposure.png}
+    \includegraphics[width=0.35\linewidth]{exposure2.png}
+    \caption{Data augmentation examples using exposure adjustment.}
+    \label{fig:exposure_aug}
+    \end{figure}
+
+    \item \textbf{Blur (up to 0.7px)}: Blur mimics motion blur and camera focus issues, which are often common in fast-paced football scenes, especially when a player sprints or the ball is in motion.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{blur.png}
+    \caption{Data augmentation example using blurring.}
+    \label{fig:blur_aug}
+    \end{figure}
+
+
+    \item \textbf{Noise (up to 0.2\% of pixels)}: Random noise was also added to replicate grainy footage or low-resolution broadcast streams, training the model to ignore irrelevant pixel-level artifacts.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{noise.png}
+    \caption{Data augmentation example using noise addition.}
+    \label{fig:noise_aug}
+    \end{figure}
+
+    % \item \textbf{Bounding Box Blur (up to 0.8px)}: Introduces slight imperfections around object edges to simulate imperfect annotations or natural visual ambiguity in object boundaries.
+\end{itemize}
+
+Together, these augmentations significantly enhance the variability of the training data without the need of additionally labelled samples. This diversity is especially beneficial for sports analytics, where visual conditions can vary widely across matches, camera setups, and environments.
+
+
+
+\subsection{Pitch Keypoint Data}
+\subsubsection{Data Annotation}
+
+The data used for keypoint detection consists of 32 key-points placed throughout the field, giving an overall structure to the football pitch \cite{pitchDataset}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/pitchLabelling.png}
+    \caption{Sample Pitch Key-point Labelling done using Roboflow.}
+    \label{fig:pitchLabelling}
+\end{figure}
+
+\subsubsection{Data Preprocessing and Augmentation}
+
+Prior to training, the raw dataset underwent a comprehensive preprocessing and augmentation pipeline designed to improve model robustness, reduce over-fitting, and simulate real-world conditions in football video analysis.
+
+\subsubsection*{Preprocessing}
+
+\begin{itemize}
+    \item \textbf{Resize $(640\times640)$}: All images were resized to a uniform resolution of $640\times640$ pixels. As mentioned before, standardizing the input dimensions is essential for batch processing in deep learning and ensures that the model receives consistent spatial information across all training samples. In this detection, a higher resolution was not required as the points were rather evident and not in motion.
+
+\end{itemize}
+
+\subsubsection*{Augmentations}
+
+Each training example was augmented to produce multiple distinct outputs. Augmentation helps simulate a variety of real-world camera conditions and player movements, encouraging the model to generalize better. The following transformations were applied:
+
+\begin{itemize}
+    \item \textbf{Saturation Adjustment (-25\% to +25\%)}: Alters the vividness of colors, mimicking differences in lighting conditions across various stadiums or times of day. 
+
+    \item \textbf{Blur (up to 0.7px)}: Mimics motion blur and camera focus issues, which are common in fast-paced football scenes, especially during player sprints or ball movement.
+
+    \item \textbf{Noise (up to 1.48\% of pixels)}: Random noise was added to replicate grainy footage or low-resolution broadcast streams, training the model to ignore irrelevant pixel-level artifacts.
+\end{itemize}
+
+Together, these augmentations significantly enhance the variability of the training data without the need of any additionally labelled samples. As mentioned previously, this diversity is especially beneficial for sports analytics, where visual conditions can vary widely across matches, camera setups, and environments.
+
+% A minimum of 4 key-points are required to be detected for a homography matrix to be calculated. This can be seen in the following figure.

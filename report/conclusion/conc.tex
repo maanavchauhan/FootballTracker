@@ -1,0 +1,64 @@
+\section{Conclusions and Reflections}
+This chapter concludes the overall project by discussing the key achievements, difficulties experienced, personal reflections and learnings and future work in the field. It provides an overview of the full project and hopes to pave a path for projects in the future to ensure the field continues to grow.
+
+\subsection{Summary of Achievements}
+The key achievements of this football video analysis system include:
+\begin{itemize}
+    \item \textbf{Object Detection and Tracking:} A \textit{YOLO}-based object detection pipeline tailored to football environments was successfully deployed. This was combined with a \textit{ByteTrack} tracking system for real-time, identity-consistent player tracking.
+    \item \textbf{Team Classification:} The development of a robust team classification method using \textit{SigLIP vision embeddings, UMAP dimensionality reduction, }and \textit{K-Means clustering} was achieved.
+    \item \textbf{Pitch Homography:} Accurate mapping of player positions from the broadcast view to a standardised top-down pitch representation using automatic keypoint detection and a robust homography estimation was made possible.
+    \item \textbf{Advanced Annotations:} Novel features such as offside detection through automated identification of last defenders, possession tracking based on ball proximity, and player instantaneous speed and cumulative distance were successfully implemented. This enhanced the system's ability to generate tactical insights that could aid in multiple ways.
+    \item \textbf{Spatial Analytics:} Voronoi heatmaps and positional density plots to visualise team dominance and player occupation zones across the pitch were generated.
+    % \item \textbf{System Design:} Building the project using object-oriented programming principles, ensuring extensibility, maintainability, and clarity of the codebase.
+\end{itemize}
+
+Collectively, these achievements have culminated in a highly effective and comprehensive system that addresses a wide spectrum of analytical needs for football video analysis.
+
+\subsection{Notable Challenges}
+
+Several significant challenges were encountered during the development lifecycle. They are mentioned as follows:
+\begin{itemize}
+    \item \textbf{Data Collection and Annotation:} The lack of readily available labelled tactical camera footage raised an issue. It led to an intensive manual effort required for accurate frame-by-frame annotation of players, balls, referees, and pitch key-points posed an early bottleneck.
+    \item \textbf{Robustness of Detection:} Handling occlusions, overlaps, and varied lighting conditions during object detection was a persistent challenge. Solutions included data augmentation and hyper-parameter tuning to improve the overall model.
+    \item \textbf{Team Classification Complexity:} Developing a clustering pipeline capable of reliably separating teams required the use of advanced feature embeddings and dimensionality reduction techniques beyond traditional colour histograms.
+
+    % \item \textbf{Performance Optimisation:} Balancing model accuracy with inference speed was critical for maintaining real-time processing capabilities, especially when integrating multiple deep learning models concurrently.
+    \item \textbf{Resource Limitation:} Testing multiple different hyper-parameters to obtain the best model performance required extensive resources. Often training of models went up to 5 hours even with the use of \textit{GPU(Graphics Processing Unit)}. With a limited number of free hours on cloud-based \textit{Jupyter notebook} environments, this was often a challenge faced.
+\end{itemize}
+
+These challenges necessitated iterative problem-solving, with several architectural redesigns and multiple experimentation cycles required to refine the final system.
+
+\subsection{Self-Reflection}
+The project provided a great experience teaching a number of different things. The key reflections are noted as follows:
+\begin{enumerate}
+    \item \textbf{Planning:} Upon reflection after the completion of the project, a key part to achieving the system was a careful and in-detail planing. Without the understanding and planning of the overall components and estimation of the time it would take for completion, the final system of such stature would have been achieved. Balancing out the independent research required, the overall organization, and the implementation was needed to be done to obtain the best results.
+    \item{Pipeline Implementation:} Throughout the project, a profound understanding of the interplay between theoretical knowledge and practical implementation was developed. Early assumptions about the simplicity of integrating separate modules into a unified pipeline were quickly challenged. This highlighted the complexities associated with the consistency of data flow, asynchronous video frame handling, and modular interdependence.
+    \item{Model Training:} The iterative nature of deep learning model development was learnt. Performance gains were often incremental and required minute adjustments rather than large changes. The practical realities of computer vision deployment led to a deeper appreciation of robust evaluation strategies and error analysis.
+\end{enumerate}
+
+
+
+\subsection{Future Work}
+The analysis of sports is an evergreen field and shall continue growing. This project has only tapped into the field and there is much more to be achieved. A few of the avenues for future enhancement of the system have been mentioned below:
+\begin{itemize}
+    \item \textbf{Larger Datasets:} Larger Datasets could significantly improve the overall model. High-quality data showcasing different situations in the game could make the model more robust and provide better results.
+    \item \textbf{Deep Re-Identification Models:} Incorporating dedicated player re-identification models could further reduce tracking identity switches during player occlusions and collisions.
+    % \item \textbf{Transformer-Based Detection:} Exploring transformer-based object detection models (such as DINO or YOLOv9) may yield improvements in small object detection accuracy and better generalisation across broadcast variations.
+    \item \textbf{Pose Estimation Integration:} Integrating human pose estimation alongside bounding boxes could provide finer-grained understanding of the player movements and stances, enriching tactical analysis. It could also improve the overall detections of offside.
+    \item \textbf{Multi-View Fusion:} Expanding the system to handle multi-camera input and perform view fusion could unlock richer 3D reconstructions and more accurate player localisation as well as tracking.
+    \item \textbf{Action Identification:} Building models that can detect different actions performed by players such as passes, attempted shots, and tackles can provide great insights to coaches and even the common man. In addition, detection of events on the field such as penalties, free-kicks, fouls could improve the game overall.
+    \item \textbf{Adaptation to other sports:} There are several other sports for which a similar system can be developed. From cricket to rugby each sport has its own style and specifications which would need to be taken into consideration.
+
+\end{itemize}
+
+By pursuing these directions, the system's capabilities could be expanded beyond the current pipeline into a fully-fledged tactical analysis suite for professional football teams and broadcasters.
+
+\subsection{Conclusion}
+
+In conclusion, this project has successfully demonstrated the feasibility and effectiveness of an integrated football video analytics system, one that is capable of producing detailed tactical insights from raw broadcast footage.
+
+We have been able to implement a system that can detect players, referees and the ball with great accuracy. An efficient and robust tracker has been utilized to obtain reliable results. Classification of the players into their respective teams showcases The system further boasts of the ability to generate spatial analysis by outputting \textit{Voronoi heatmaps}. Finally the system adds a layer of tactical analysis by showcasing ball possession, individual player speed and distance travelled, and offside detection.
+
+By addressing complex challenges in different components, a strong foundation has been established for future development and research in automated sports analytics. The experience gained during this project has provided a an overall hunger for deeper exploration of computer vision, machine learning, and sports data science in real-world applications. 
+
+The project as a whole has achieved its aims and objectives and provides a valuable stepping stone in the field of analytics. As the future work suggests, there is always a potential for improvement; to generate better and more in-depth analysis of the sport, for the coaches and the common crowd. 
