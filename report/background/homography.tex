@@ -1,0 +1,79 @@
+\subsection{Pitch Homography: Background and Theory}
+\label{subsec:homography}
+Homography is a fundamental concept in computer vision that refers to the projective transformation between two planes. It is particularly powerful in sports analytics, enabling the transformation of player positions from a broadcast frame into a top-down \textit{Bird’s Eye View} of the playing field. This transformation provides spatially accurate insights into team formations, offside detection, and player movement heatmaps, essential for tactical evaluation in football analytics.
+
+\subsubsection{Theoretical Foundations}
+
+A homography $H$ is a $3 \times 3$ matrix that relates the coordinates of points in one image plane to another via a planar transformation. Given a point $\mathbf{x} = [x, y, 1]^T$ in the image and its corresponding point $\mathbf{x'} = [x', y', 1]^T$ in the pitch coordinate system, the homography relationship is defined as:
+
+\[
+s \cdot \mathbf{x'} = H \cdot \mathbf{x}
+\]
+
+where $s$ is a scale factor due to homogeneous coordinates. The matrix $H$ has 8 degrees of freedom (since it is defined up to scale), requiring at least four pairs of non-collinear corresponding points to solve using methods like \textit{Direct Linear Transformation (DLT)}. To handle inaccuracies and noise in keypoint detection, the robust estimation technique \textit{RANSAC (Random Sample Consensus)} is employed to refine $H$ by minimizing reprojection error while ignoring outliers.
+
+
+% After filtering low-confidence detections, the transformation from broadcast to pitch is computed as follows:
+
+% \begin{verbatim}
+% self.transformer = ViewTransformer(
+%     source=frame_reference_points,
+%     target=pitch_reference_points
+% )
+% \end{verbatim}
+
+
+
+% \begin{verbatim}
+% self.pitch_ball_xy = self.transformer.transform_points(points=self.frame_ball_xy)
+% \end{verbatim}
+
+\subsubsection{Direct Linear Transform (DLT)}
+
+The \texttit{Direct Linear Transform (DLT)} is a standard algorithm used to compute the homography matrix from a set of point correspondences between two images or frames. It is a linear method based on solving a system of equations derived from the projective transformation model.
+
+The core steps of the DLT method are:
+
+\begin{itemize}
+    \item \textbf{Normalize Points:} Optionally normalize the input coordinates (e.g., shift the centroid to the origin and scale to unit average distance) to improve the overall numerical stability.
+
+    \item \textbf{Set Up Equations:} For each pair of corresponding points, derive two linear equations based on the homography constraint. At least 4 point pairs are required.
+
+    \item \textbf{Build Matrix System:} Stack all equations into a matrix \( A \), such that \( Ah = 0 \), where \( h \) is the vectorized form of the homography matrix \( H \).
+
+    \item \textbf{Solve with SVD:} Solve the system using \textit{Singular Value Decomposition (SVD)}. The solution \( h \) corresponds to the right singular vector of \( A \) associated with the smallest singular value.
+
+    \item \textbf{Reshape and Denormalize:} Reshape \( h \) into a \( 3 \times 3 \) homography matrix \( H \). If normalization was used in the first step, apply the inverse transformation.
+\end{itemize}
+
+The \textit{DLT} algorithm is simple, efficient, and works well when combined with RANSAC to handle outliers.
+
+
+
+\subsubsection{RANSAC for Homography Estimation}
+
+To compute a reliable homography matrix from feature point correspondences between two images or video frames, the \textit{RANdom SAmple Consensus (RANSAC)} algorithm is commonly used. \textit{RANSAC} helps to eliminate the influence of incorrect or mismatched point pairs (outliers) that could distort the final result.
+
+The process of \textit{RANSAC} for homography estimation typically involves the following steps:
+
+\begin{itemize}
+    \item \textbf{Random Sampling:} Randomly select a small subset of point correspondences (usually 4 pairs) from the full set of matched points. These are used to compute a candidate homography matrix.
+    
+    \item \textbf{Compute Homography:} Use the selected subset to compute a homography matrix using \textit{Direct Linear Transformation (DLT)} or similar method.
+    
+    \item \textbf{Evaluate Inliers:} Apply the computed homography to all points in the full set and measure how well the transformed points align with their corresponding target points. Points that fall within a certain error threshold are considered \textit{inliers}.
+    
+    \item \textbf{Repeat Process:} Repeat the above steps for a fixed number of iterations (or until a certain confidence level is reached), each time choosing a different random subset.
+    
+    \item \textbf{Select Best Model:} Choose the homography matrix that produced the highest number of inliers across all iterations.
+    
+    \item \textbf{Recompute with Inliers:} Finally, re-estimate the homography using all inliers from the best model to improve accuracy.
+\end{itemize}
+
+This approach is robust against noise and incorrect matches, making it well-suited for real-world scenarios such as estimating camera motion or mapping the football pitch from broadcast footage.
+
+
+
+\subsubsection{Challenges and Considerations}
+
+The accuracy of homography heavily depends on keypoint detection quality and spatial coverage. Tactical footage typically offers a wide angle with sufficient landmarks, unlike broadcast footage, which often lacks enough field reference points for stable homography. To address this, a \textit{homography update condition} is implemented: the homography matrix is recomputed only when the Mean Squared Error (MSE) between newly detected and previously matched points exceeds a threshold. This avoids jittery transformations and ensures an overall computational efficiency.

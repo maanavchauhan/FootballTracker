@@ -1,0 +1,79 @@
+
+
+
+\subsection{Offside Detection}
+The rule of offside plays an essential role in the sport of football. The system provides the ability to detect the \textit{offside-line} for both teams and detect if any players stand in the offside position. Before diving into how the \textit{offside-line} is detected, it is crucial to understand what exactly is an offside. Law 11 laid by the \textit{International Football Association Board}, talks about what is classified as an offside. It is stated as follows \cite{ifab2024laws}:\\
+\textbf{11.1 Offside Position:} 
+\begin{quote}
+A player is in an offside position if:
+\begin{itemize}
+  \item any part of the head, body, or feet is nearer to the opponents' goal line than both the ball and the second-last opponent.
+  \item they are in the opponents' half of the field.
+\end{itemize}
+\textit{Note:} The hands and arms of all players, including the goalkeepers, are not considered. For the purposes of determining offside, the upper boundary of the arm is in line with the bottom of the armpit.
+\end{quote}
+\textbf{11.2 Offside Offence:} 
+\begin{quote}
+    A player in an offside position at the moment the ball is played or touched by a team-mate is only penalised on becoming involved in active play by:
+\begin{itemize}
+  \item interfering with play by playing or touching a ball passed or touched by a team-mate; or
+  \item interfering with an opponent by:
+    \begin{itemize}
+      \item preventing an opponent from playing or being able to play the ball by clearly obstructing the opponent’s line of vision; or
+      \item challenging an opponent for the ball; or
+      \item clearly attempting to play a ball which is close when this action impacts on an opponent; or
+      \item making an obvious action which clearly impacts on the ability of an opponent to play the ball.
+    \end{itemize}
+  \item gaining an advantage by playing the ball or interfering with an opponent when it has:
+    \begin{itemize}
+      \item rebounded or been deflected off the goalpost, crossbar, match official or an opponent; or
+      \item been deliberately saved by any opponent.
+    \end{itemize}
+\end{itemize}
+\end{quote}
+\textbf{11.3 No Offence:} 
+\begin{quote}
+There is no offside offence if a player receives the ball directly from:
+\begin{itemize}
+  \item a goal kick;
+  \item a throw-in; or
+  \item a corner kick.
+\end{itemize}
+\end{quote}
+
+\textbf{11.4 Sanctions:} 
+\begin{quote}
+If an offside offence occurs, the referee awards an indirect free kick where the offence occurred, including if it is in the player’s own half of the field of play.
+\end{quote}
+Based on this law, a basic offside detection algorithm was implemented using concepts of homography to determine the line of offside. 
+\begin{enumerate}
+    \item Using the concept of homography a \textit{2D Top-Down View}, i.e. Bird's Eye View , is generated.
+    \item Based on the team, the player closest to that team's respective goalpost is detected. Note, in this the goalkeeper is excluded as the goalkeeper's position is not taken into account for offside.
+    \item A line parallel to the \textit{Y-axis} which passes through the \textit{X}-coordinate of that player is taken. This is the offside line in the Top-down View. This can be seen in Figure~\ref{fig:offside}(a).
+    \item The detected offside line is converted to the equivalent line on the live camera pitch using homography. This can be seen in Figure~\ref{fig:offside}(b). 
+    \item Any player from the opposition team behind this line without the football in possession is said to be in an \textit{offside position} and is recorded.
+    \item If the ball does come in the possession of a player in an \textit{offside position} it is classified as an \textit{offside offence}. In response, a free kick is given to the defending team.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/offside2D.jpeg}
+        \caption{Offside line detection on 2D pitch view.}
+        \label{fig:offside-2d}
+    \end{subfigure}
+    \hfill
+    \\
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/offside.png}
+        \caption{Offside line detection on broadcast view.}
+        \label{fig:offside-broadcast}
+    \end{subfigure}
+    \caption{Sample images with the offside line detected in different views.}
+    \label{fig:offside}
+\end{figure}
+
+
+As seen in Figure~\ref{fig:offside}, the offside line was detected from the 2D view and then using homography, the line was converted to fit on the live camera pitch. The reason why the detection of the offside line is done on the \textit{Top-Down View} and not directly on the live camera is that the offside line has to be parallel to the pitch, however, the pitch is seen from a particular angle. Therefore, detection of it is much simpler if done on the \textit{Top-Down View},

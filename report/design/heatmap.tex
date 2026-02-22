@@ -1,0 +1,28 @@
+\subsection{Generated Heatmaps}
+
+Voronoi diagrams are often used to visualize the spatial control across the pitch. The system can generate two different variations to enhance the overall tactical understanding. Both methods partition the pitch based on the player locations, however, they differ in how the players' presence is visually represented.
+
+\subsubsection{Voronoi Heatmap without Player Markers}
+
+As shown in Figure~\ref{fig:voronoi_no_points}, the first variation displays only the \textit{Voronoi regions} without marking individual players. Each region is colour-coded according to the team's identity, providing a clear visualization of the overall spatial dominance at any given moment without the distraction of specific player positions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/heatmap.jpeg}
+    \caption{Voronoi Heatmap showing areas of team control without explicit player markers.}
+    \label{fig:voronoi_no_points}
+\end{figure}
+
+\subsubsection{Voronoi Heatmap with Player Markers}
+
+The second variation can be seen in Figure~\ref{fig:voronoi_with_points}. It overlays player markers onto the Voronoi diagram. Here, each player's position is marked with a distinct dot, offering a more detailed view that connects spatial regions directly to individual players. This version provides a finer insight into the player spacing, clustering, and positioning relative to the controlled regions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/heatmap2.jpeg}
+    \caption{Voronoi heatmap showing team control areas with individual player markers.}
+    \label{fig:voronoi_with_points}
+\end{figure}
+
+Both the types of heatmaps are important for analysing the overall team shape and spatial occupation. This allows for both high-level and detailed assessments of the tactical behaviour.
+

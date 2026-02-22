@@ -1,0 +1,111 @@
+\subsection{Player Tracking}
+The tracking of players plays a essential role in the overall system, and several other parts depend on it; therefore, tracking should be robust and generate reliable results. The system utilizes \textit{ByteTrack} to achieve this. 
+
+\subsubsection{Why ByteTrack?}
+The reason why \textit{ByteTrack} was chosen over other trackers such as \textit{DeepSORT}, is its ability to retain tracking across even the low-confidence detections without requiring appearance embeddings. This makes it more efficient and robust under occlusions. This can be seen in Figure~\ref{fig:ByteTrack}, which showcases \textit{ByteTrack's} performance in comparison to other trackers. In addition, an in detail comparison done by Zhang et al. between \textit{DeepSORT} and \textit{ByteTrack} can be seen in Table~\ref{tab:byte_deepsort_comparison} \cite{zhang2022bytetrack}. Both the models were run using light detection models (\textit{YOLOX}) on the \href{https://motchallenge.net/data/MOT17/}{MOT17 Dataset}.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/byteTrack.png}
+    \caption{Comparison of ByteTrack with other Trackers~\cite{zhang2022bytetrack}.}
+    \label{fig:ByteTrack}
+\end{figure}
+
+
+
+% \begin{table}[H]
+% \centering
+% \caption{Comparison of BYTE and DeepSORT using light detection models on the MOT17 validation set.}
+% \begin{tabular}{@{}lccclcc@{}}
+% \toprule
+% \textbf{Backbone} & \textbf{Params} & \textbf{GFLOPs} & \textbf{Tracker} & \textbf{MOTA}↑ & \textbf{IDF1}↑ & \textbf{IDs}↓ \\
+% \midrule
+% YOLOX-M       & 25.3 M & 118.7 & DeepSORT & 74.5 & 76.2 & 197 \\
+% YOLOX-M       & 25.3 M & 118.7 & BYTE     & 75.3 & 77.5 & 200 \\
+% YOLOX-S       & 8.9 M  & 43.0  & DeepSORT & 69.6 & 71.5 & 205 \\
+% YOLOX-S       & 8.9 M  & 43.0  & BYTE     & 71.1 & 73.6 & 224 \\
+% YOLOX-Tiny    & 5.0 M  & 24.5  & DeepSORT & 68.6 & 72.0 & 224 \\
+% YOLOX-Tiny    & 5.0 M  & 24.5  & BYTE     & 70.5 & 72.1 & 222 \\
+% YOLOX-Nano    & 0.9 M  & 4.0   & DeepSORT & 61.4 & 66.8 & 212 \\
+% YOLOX-Nano    & 0.9 M  & 4.0   & BYTE     & 64.4 & 68.4 & 161 \\
+% \bottomrule
+% \end{tabular}
+% \label{tab:byte_deepsort_comparison}
+% \end{table}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Backbone} & \textbf{Params} & \textbf{GFLOPs} & \textbf{Tracker} & \textbf{MOTA}↑ & \textbf{IDF1}↑ & \textbf{IDs}↓ \\
+\hline
+YOLOX-M       & 25.3 M & 118.7 & DeepSORT & 74.5 & 76.2 & 197 \\
+YOLOX-M       & 25.3 M & 118.7 & BYTE     & 75.3 & 77.5 & 200 \\
+YOLOX-S       & 8.9 M  & 43.0  & DeepSORT & 69.6 & 71.5 & 205 \\
+YOLOX-S       & 8.9 M  & 43.0  & BYTE     & 71.1 & 73.6 & 224 \\
+YOLOX-Tiny    & 5.0 M  & 24.5  & DeepSORT & 68.6 & 72.0 & 224 \\
+YOLOX-Tiny    & 5.0 M  & 24.5  & BYTE     & 70.5 & 72.1 & 222 \\
+YOLOX-Nano    & 0.9 M  & 4.0   & DeepSORT & 61.4 & 66.8 & 212 \\
+YOLOX-Nano    & 0.9 M  & 4.0   & BYTE     & 64.4 & 68.4 & 161 \\
+\hline
+\end{tabular}
+\caption{Comparison of BYTE and DeepSORT using light detection models on the MOT17 Dataset~\cite{zhang2022bytetrack}.}
+\label{tab:byte_deepsort_comparison}
+\end{table}
+
+
+\subsubsection{Implementation}
+
+As mentioned in Section~\ref{subsec:tracking}, ByteTrack is a multi-object tracking algorithm designed to associate detections with persistent object identities across video frames. The tracking was implemented using the aid of the \texttt{supervision} package~\cite{supervision}. The package provided implements a class-based version of the ByteTrack algorithm; using \textit{Kalman Filters} for prediction and the \textit{Hungarian Algorithm} for data association.
+
+% \subsubsection*{Class: \texttt{ByteTrack}}
+
+% \paragraph{Constructor: \texttt{\_\_init\_\_()}}
+The ByteTrack tracker has the following configurable parameters:
+\begin{itemize}[itemsep=0pt]
+  \item \texttt{track\_activation\_threshold}: Minimum confidence score to activate a new track.
+  \item \texttt{lost\_track\_buffer}: Maximum number of frames a track can be unmatched before it is removed.
+  \item \texttt{minimum\_matching\_threshold}: IoU threshold for data association.
+  \item \texttt{frame\_rate}: Video frame rate, used to scale timing behaviour.
+  \item \texttt{minimum\_consecutive\_frames}: Required number of frames before considering a track valid.
+\end{itemize}
+
+It initializes the Kalman filters and lists to manage the active, lost, and removed tracks. Following this, two functions are used which implement the core of \textit{ByteTrack}.
+
+\paragrpah{Function: \texttt{update\_with\_detections()}}
+This function receives the object detector output and returns the tracked results. It:
+\begin{enumerate}
+  \item Converts bounding boxes and confidence values into tensors.
+  \item Passes the tensors to \texttt{update\_with\_tensors()} to update tracking state.
+  \item Uses IoU to associate detections with tracked objects and assign them unique tracker IDs.
+  \item Returns only detections that were successfully matched to tracks.
+\end{enumerate}
+
+\paragraph{Function: \texttt{update\_with\_tensors()}}
+This function performs the core tracking logic. It:
+\begin{enumerate}
+  \item Splits high and low confidence detections into two groups.
+  % \item Initializes new \texttt{STrack} objects from high-confidence detections.
+  \item Predicts positions of existing tracks using \textit{Kalman Filters}.
+  \item Performs data association using \textit{IoU} and the \textit{Hungarian algorithm}.
+  \item Matches detections to existing tracks:
+  \begin{itemize}
+    \item Updates existing tracks.
+    \item Re-activates previously lost tracks.
+    \item Handles unmatched tracks and detections using a second matching stage with lower confidence detections.
+  \end{itemize}
+  \item Initializes new tracks from unmatched detections if confidence is high enough.
+  \item Prunes tracks that are lost for too long.
+\end{enumerate}
+
+% \paragraph{Supporting Functions}
+% \begin{itemize}
+%   \item \texttt{reset()}: Resets internal tracker state for reuse on new videos.
+%   \item \texttt{joint\_tracks()}, \texttt{sub\_tracks()}, \texttt{remove\_duplicate\_tracks()}: Utility functions to manage track lists without duplication.
+% \end{itemize}
+
+
+The ByteTrack implementation in Python efficiently handles multi-object tracking by combining confidence-based filtering, motion prediction, and spatial matching. It offers robustness against detection noise and occlusions and is suitable for real-time sports analytics and video understanding tasks.
+

@@ -1,0 +1,368 @@
+
+
+
+This chapter present a detailed evaluation of each component of the system; player detection, pitch detection, team classification, and tracking performance. Several hyper-parameters have been experimented with to obtain the optimum fine-tuned model for each component. Metrics such as \textbf{mean Average Precision (mAP)} and \textbf{Higher Order Tracking Accuracy (HOTA)} have been used to quantify performance.
+
+\subsection{Common Metrics}
+For the evaluation of different components, several different metrics were used. Some of the common ones are explained here briefly:
+\begin{enumerate}
+    \item \textbf{Accuracy} measures the proportion of correctly predicted instances (both true positives and true negatives) among all instances.
+\begin{equation}
+\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+\end{equation}
+
+\item \textbf{Precision} measures the proportion of true positive predictions among all positive predictions.
+\begin{equation}
+\text{Precision} = \frac{TP}{TP + FP}
+\end{equation}
+
+\item \textbf{Recall} (also known as Sensitivity or True Positive Rate) measures the proportion of true positives among all actual positives.
+\begin{equation}
+\text{Recall} = \frac{TP}{TP + FN}
+\end{equation}
+
+\item \textbf{F1 Score} is the harmonic mean of Precision and Recall, providing a balance between the two.
+\begin{equation}
+\text{F1 Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+\end{equation}
+
+\noindent
+Where:
+\begin{itemize}
+    \item \( TP \) = True Positives
+    \item \( TN \) = True Negatives
+    \item \( FP \) = False Positives
+    \item \( FN \) = False Negatives
+\end{itemize}
+\end{enumerate}
+
+\item \textbf{Mean Average Precision (mAP@0.5):} This measures the trade-off between precision and recall at an Intersection over Union (IoU) threshold of 0.5. A higher mAP indicates better detection performance.
+
+\subsection{Object and Key-Point Detection}
+
+\subsubsection{Data Preparation}
+
+Proper data preparation is essential to ensure an overall fair evaluation of the components. The dataset collected for this project's evaluation consists of annotated football frames containing bounding boxes for the players, referees, the ball, and pitch key-points. The following data splits were used:
+
+\begin{itemize}
+    \item \textbf{Training Set:} 80\% of the total labelled frames
+    \item \textbf{Validation Set:} 10\% of the total labelled frames
+    \item \textbf{Test Set:} 10\% of the total labelled frames
+\end{itemize}
+
+Frames were randomly shuffled before splitting to avoid temporal correlation between frames from the same sequence. Data augmentation strategies such as random horizontal flipping, noise, blur, contrast and brightness changes, and mosaic composition were applied during training but not during validation or testing. This ensures that model evaluation accurately reflects performance on real-world, unseen data without augmentation artifacts. This ensures that the result obtained are reliable and depict an honest evaluation.
+
+\subsubsection{Evaluation Metrics}
+The primary metrics used for evaluating the detection models are \textbf{accuracy}, \textbf{precision}, and \textbf{mAP@0.5}.
+
+\subsubsection{Player Detection}
+Accurate player detection is critical as it underpins all downstream components such as tracking, team classification, and tactical analysis. Any inaccuracies in the detections would directly affect the performance of subsequent modules.
+
+\paragraph{Experimentation and Results}
+The detection of players, referees, and the ball is the primary steps and requires a robust object detection model. To obtain a reliable \textit{YOLO} model, experimentation with various different configurations was performed:
+
+\begin{enumerate}
+    \item \textbf{Low Resolution + No Augmentation:} A lower resolution of \[640 \times 640\] was used. No data-augmentation was done here.
+    \item \textbf{High Resolution + No Augmentation}: A higher resolution of \[1280 \times 1280\] was used. No data-augmentation was done here.
+    \item \textbf{Default Augmentation:} The default augmentation of data done by \textit{YOLOv8} was used here. This includes: 
+    \begin{itemize}
+      \item \textbf{Hue }: Random Hue shift up to $\pm0.015$.
+      \item \textbf{Saturation}: Saturation scaled by a factor up to 0.7.
+      \item \textbf{Brightness}: Brightness scaled by a factor up to 0.4.
+      \item \textbf{Translation}: Random shift in x and y direction up to $\pm10\%$ of image size.
+      \item \textbf{Scaling}: Image scaled randomly by a factor up to 0.5.
+      \item \textbf{Horizontal Flip}: Applied with 50\% probability.
+      \item \textbf{Mosaic Augmentation}: Combines four images into one training sample.
+    \end{itemize}
+    \item \textbf{Improved Augmentation:} The default augmentation of data done by \textit{YOLOv8} was improved by changing a few values making it for football. This includes: 
+    \begin{itemize}
+      \item \textbf{Rotation}: Randomly rotated up to $\pm10^\circ$
+      \item \textbf{Shear}: Shear was randomly added from $\pm10^\circ$ \textit{horizontal} and $\pm10^\circ$ \textit{vertical}.
+      \item \textbf{Brightness}: Brightness was varied by $\pm15\%$.
+      \item \textbf{Exposure}: Exposure was varied by $\pm10\%$.
+     \item \textbf{Blur}: Blur was added up to by $0.7 px$.
+      \item \textbf{Horizontal Flip}: Applied with 50\% probability.
+      \item \textbf{Mosaic Augmentation}: Combines four images into one training sample.
+    \end{itemize}
+    \item \textbf{Mixup+Augmentation:} This has the same augmentation as the previous but also adds mixup. In mixup, the images are overlaid with weighted transparency of other images. This aids in the overall regularization of the model.
+
+
+
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Configuration} & \textbf{mAP@0.5} & \textbf{Recall} & \textbf{Precision} \\
+\hline
+Low Resolution & 80.8\% & 76.3\% & 87.2\% \\
+High Resolution + No Augmentation & 87.8\% & 85.9\% & 88.1\% \\
+Default Augmentation & 90.7\% & 84.9\% & 93.4\% \\
+Improved Augmentation & 90.9\% & 85.7\% & 93.5\% \\
+Augmentation + Mixup & 90.9\% & 86.8\% & 91.4\% \\
+\hline
+\end{tabular}
+\caption{Object Detection Model Results for change in Augmentation.}
+\label{tab:player_detection_results}
+\end{table}
+
+A secondary experiment was done. The learning rate plays a great role in the overall functioning of the model. It decides by how much should the weights change after each epoch. 
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Learning Rate} & \textbf{mAP@0.5} & \textbf{Recall} & \textbf{Precision} \\
+\hline
+0.001 & \textbf{91.1\%} & 86.2\% &\textbf{ 95.1\%} \\
+0.01 & 90.9\% & 85.7\% & 93.5\% \\
+0.1 & 90.1\% & \textbf{88.7\%} & 87.8\% \\
+\hline
+\end{tabular}
+\caption{Object Detection Model Results for change in Learning Rate.}
+\label{tab:player_detection_results}
+\end{table}
+
+A graph has also been shown displaying the training of the final model with \textbf{augmentation} and a learning rate of \textbf{0.001}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{images/objectdetectiongraph.png}
+    \caption{Graphs showing the training of the Object Detection Model. Contains Precision, Recall, mAP@0.5 and mAP@0.5-0.95. The x-axis represnts the epoch number.}
+    \label{fig:pitchDetectionResults}
+\end{figure}
+
+\subsubsection{Discussion}
+The results demonstrate that training on low resolution despite using less resources does not produce accurate enough results. It struggles especially in ball detections where the ball gets blurred too much due to the resizing. In addition, extensive augmentation techniques combined with mix-up, significantly improved the model's ability to generalize to unseen football frames. Therefore, the the model was trained on augmented data with mix-up.
+
+From the secondary experiment it can be seen that a lower learning rate does improve the model generating a significant improvement in \textit{mAP@0.5}. This shows that slowly converging to the minima of loss function obtains better results here, however, at the cost of resources. Higher learning rates do often cause the model to overshoot and diverge from the optimum solution.
+
+\subsubsection{Pitch Detection}
+Pitch detection is a fundamental part that enables spatial transformations such as pitch homography, crucial for creating tactical bird's-eye views and spatial analyses.
+
+\subsubsection{Evaluation Metrics}
+The pitch detection model was evaluated using \textbf{mAP@0.5}.
+
+\subsubsection{Experimentation and Results}
+The pitch detection model was evaluated by varying the number of epochs. Epochs was chosen here as it showcases if the model might be over-fitting or under-fitting; a factor that plays a significant role in key-point localization. The values \textbf{100, 300, }and\textbf{ 500} were tested. The results are displayed below.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Epoch Number} & \textbf{Precision} & \textbf{Recall} & \textbf{mAP@0.5} \\
+\hline
+100 &  99.8\% & 100\% & 99.5\%\\
+300 & 100\% & 100\% & 99.5\%\\
+500 & 99.9\% & 100\% & 99.5\%\\
+\hline
+\end{tabular}
+\caption{Pitch Detection Performance on Different Epochs.}
+\label{tab:pitch_detection_epoch}
+\end{table}
+
+A graph has also been shown displaying the training of the 300 epochs model.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{images/pitchDetectionResults.png}
+    \caption{Graphs showing the training of the Pitch Detection Model. Contains Precision, Recall, mAP@0.5 and mAP@0.5-0.95. The x-axis represnts the epoch number.}
+    \label{fig:pitchDetectionResults}
+\end{figure}
+
+\subsubsection{Discussion}
+Unlike object detection, it can be seen here that even lower-resolution images generate highly accurate models, therefore eliminating the need to run on higher quality images at the cost of resources. 
+
+The results show that by applying a combination of different augmentations during training leads to significant improvements in the keypoint localization. The correct number of epochs improves the performance of the model by a \textbf{0.1\%} Precision. Even though the improvement might not seem great, in high-resolution football videos, even minute errors can lead to distort spatial mappings.
+
+\subsection{Team Classification}
+Team classification is a crucial component in sports video analytics. It plays a key role in tactical analysis and off-side detection.
+
+\subsubsection{Data Collection}
+For the testing of the player classification, testing was done using from the validation data of 
+\href{https://motchallenge.net/data/MOT17/}{\textbf{MOT17 Dataset - MOTChallenge}}. The ground truth provided was compared with the result of the classification pipeline
+
+
+\subsubsection{Evaluation Metrics}
+Team classification performance was evaluated using \textbf{accuracy}, \textbf{precision}, \textbf{recall}, and \textbf{F1 Score}.
+\subsubsection{Experimentation and Results}
+The overall team classification's results can be seen below:
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Accuracy & 0.9583678541839271 \\
+Precision & 0.9638345089677017 \\
+Recall & 0.9539961886863946 \\
+F1 Score & 0.9575176656228064 \\
+\hline
+\end{tabular}
+\caption{Overall Performance Metrics}
+\label{tab:classification results}
+\end{table}
+
+
+\subsubsection{Discussion}
+Based on the results obtained, we can conclude that the overall algorithm for team segmentation works efficiently even when the conditions can vary significantly.
+
+\subsection{Player Tracking}
+As mentioned previoulsy in Subsection~\ref{subsec:tracking}, player tracking plays a key role and therefore it needs to be reliable. To ensure this, it was evaluated extensively, testing multiple different parameters of it. The variables experimented with are as follows:
+\begin{enumerate}
+    \item \textbf{Minimum Matching Threshold:} This represents the minimum IoU-based threshold to match detections with existing tracks.
+    The following values were tested: \textbf{0.7, 0.8, 0.9}.
+    \item \textbf{Track Activation Threshold:} This is the confidence threshold for a detection to start tracking.
+    The following values were tested: \textbf{0.1, 0.25, 0.4}.
+    \item \textbf{Minimum Consecutive Frames:} This is the minimum number of frames before a track is considered valid.
+    The following values were tested: \textbf{1, 2, 3}.
+\end{enumerate}
+
+Each parameter was individually experimented with, keeping the other parameters to their default value.
+
+
+\subsubsection{Data Collection}
+Similar to player classification, the evaluation of the player tracking was done on the validation data of 
+\href{https://motchallenge.net/data/MOT17/}{\textbf{MOT17 Dataset - MOTChallenge}}. The tests were run using the code given by \href{https://github.com/MCG-NJU/SportsMOT/tree/main}{\textit{SportsMOT}}.
+
+
+\subsubsection{Evaluation Metrics}
+Tracking performance was quantified using \textit{HOTA (Higher Order Tracking Accuracy)}.
+
+While \textit{Multiple Object Tracking Accuracy (MOTA)} has been a longstanding standard for evaluating tracking systems, it presents several critical limitations for modern, complex tracking scenarios. \textit{MOTA} primarily emphasizes detection errors (false positives and false negatives) and identity switches. This results in a metric that heavily weights \textit{detection performance} over \textit{association accuracy}. This imbalance often leads to misleading evaluations where trackers that excel at maintaining consistent identities across frames are unfairly penalized if they have minor detection issues~\cite{hota}.
+
+Furthermore, \textit{MOTA’s} association scoring is limited to short-term, first-order errors and does not capture long-term identity consistency, which is crucial in sports analytics where player tracking must remain accurate across the duration of the match.
+
+To address these deficiencies, \textit{HOTA (Higher Order Tracking Accuracy)}. Unlike \textit{MOTA}, \textit{HOTA} evaluates both detection and association with equal weighting. It achieved this by measuring the association accuracy over entire trajectories rather than just between consecutive frames. This higher-order association analysis allows HOTA to more accurately reflect how well predicted tracks align with the ground truth over time~\cite{hota}.
+
+% It also handles ID switches more intuitively, rewarding trackers that are able to recover from earlier mistakes---something MOTA fails to do, as it penalizes corrections as if they were new errors. Additionally, HOTA’s use of the Jaccard index ensures the metric is symmetric and bounded, offering a clearer and more interpretable evaluation score.
+
+For these reasons, HOTA was selected as a more balanced and insightful evaluation metric for evaluating the tracking performance of the system. However, the metric \textit{MOTA} is also given for comparison purposes.
+
+
+\textit{HOTA} is defined as the average of the geometric mean of the detection accuracy \textit{(DetA)} and the association accuracy \textit{(AssA)} across a range of \textit{IoU} thresholds:
+
+\begin{equation}
+\mathrm{HOTA} = \frac{1}{|\mathcal{A}|} \sum_{\alpha \in \mathcal{A}} \sqrt{\mathrm{DetA}(\alpha) \cdot \mathrm{AssA}(\alpha)}
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $\mathcal{A}$ is a set of IoU thresholds (e.g., $\{0.05, 0.10, ..., 0.95\}$)
+    \item $\alpha$ is the specific IoU threshold
+    \item $\mathrm{DetA}(\alpha)$ is the detection accuracy at threshold $\alpha$
+    \item $\mathrm{AssA}(\alpha)$ is the association accuracy at threshold $\alpha$
+\end{itemize}
+
+These components are defined as follows:
+\begin{enumerate}
+    \item Detection accuracy measures how well the tracker finds objects (i.e., players) in each frame:
+
+\begin{equation}
+\mathrm{DetA}(\alpha) = \frac{|\mathrm{TP}_{\alpha}|}{|\mathrm{TP}_{\alpha}| + |\mathrm{FP}_{\alpha}| + |\mathrm{FN}_{\alpha}|}
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $\mathrm{TP}_{\alpha}$ = true positives at IoU $\alpha$ (correctly matched detections)
+    \item $\mathrm{FP}_{\alpha}$ = false positives at IoU $\alpha$ (extra detections)
+    \item $\mathrm{FN}_{\alpha}$ = false negatives at IoU $\alpha$ (missed detections)
+\end{itemize}
+
+In simple terms: \textit{DetA tells us how many players were correctly detected compared to how many were missed or wrongly added.}
+
+
+\item Association accuracy measures how well the tracker maintains the identity of each object over time:
+
+\begin{equation}
+\mathrm{AssA}(\alpha) = \frac{1}{|\mathrm{TP}_{\alpha}|} \sum_{c \in \mathrm{TP}_{\alpha}} \mathcal{A}(c)
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $\mathcal{A}(c)$ is the association score for a correct match $c$, which evaluates how well the tracker's identity for that object matches the ground truth identity across its trajectory.
+\end{itemize}
+
+In plain terms: \textit{AssA tells us how good the system is at keeping the same ID for each player across frames—crucial for analyzing movement and strategy.}
+\end{enumerate}
+
+
+\vspace{1em}
+
+By combining detection accuracy and association accuracy at multiple IoU levels, HOTA provides a balanced view of both how \textit{accurate} and how \textit{consistent} a tracker is. It overcomes the limitations of older metrics like MOTA, which focus too much on detection and not enough on identity tracking.
+
+
+
+
+\subsubsection{Experimentation and Results}
+Experiments were conducted to tune the ByteTrack tracker settings. Various parameters were tested as mentioned and an overall combination was chosen. 
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Minimum Matching Threshold} & \textbf{MOTA (\%)} & \textbf{HOTA (\%)} \\
+\hline
+0.7 & 81.397\% & 66.544\%\\
+0.8  &  82.961\% &  71.413\% \\
+\textbf{0.9} & \textbf{83.738\%} & 72.953\%\\ 
+\hline
+\end{tabular}
+\caption{Tracking Performance Results for Minimum Matching Threshold.}
+\label{tab:matching_threshold}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Track Activation Threshold} & \textbf{MOTA (\%)} & \textbf{HOTA (\%)} \\
+\hline
+0.1 & 82.943\% & 71.407\%\\
+0.25 & 82.961\%  &  71.413\% \\
+\textbf{0.4} & \textbf{83.092\%} &  \textbf{71.481\%} \\
+\hline
+\end{tabular}
+\caption{Tracking Performance Results for Track Activation Threshold.}
+\label{tab:activation_threshold}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Minimum Consecutive Frames} & \textbf{MOTA (\%)} & \textbf{HOTA (\%)} \\
+\hline
+\textbf{1} & \textbf{82.961\%} &  \textbf{71.413\%} \\
+2 &  80.14\% & 70.28\%\\
+3 & 79.616\% & 69.65\% \\ 
+\hline
+\end{tabular}
+\caption{Tracking Performance Results for Minimum Consecutive Frames.}
+\label{tab:consecutive_frames}
+\end{table}
+
+
+
+\subsubsection{Discussion}
+From the results, it can be clearly seen that adjustments to parameters significantly affected the results. From the experiment, we can see that an overall high threshold 
+value for matching to be considered valid generates better results. Similarly, a higher threshold value for the activation of a track creates more reliable outputs. However, in contrast to the previous two, a lower number for the minimum frame required for a track to be considered valid has generated the best results. 
+ 
+The parameters were then combined with their best values: 
+ \begin{enumerate}
+     \item Minimum Matching Threshold: \textbf{0.9}.
+     \item Track Activation Threshold: \textbf{0.4}
+     \item Minimum Consecutive Frames: \textbf{1}.
+ \end{enumerate}
+ 
+The final system obtained produced a \textit{HOTA} of \textbf{73.044\%} and a \textit{MOTA} of \textbf{83.921\%}. 
+
+\subsection{General Discussion}
+From the evaluation results across all components, we can demonstrate that:
+
+\begin{itemize}
+    \item Strong data augmentation is essential for improving the robustness of \textit{object} and \textit{keypoint detection} models.
+    \item Tracking can be significantly improved by using models to generate embeddings over traditional methods.
+    \item Fine-tuning tracker parameters significantly improves tracking stability, especially in complex football scenes involving occlusions and rapid player movements.
+\end{itemize}
+
+Future work could involve deploying larger detection backbones, exploring semi-supervised clustering for team classification, and incorporating temporal smoothing modules into the tracking pipeline to further enhance system reliability.

@@ -1,0 +1,35 @@
+
+
+This section outlines the technical framework and implementation details of the system. It is engineered to perform object detection, classification, and tracking of the players, referees, and the ball. In addition, the system can distinguish between the two teams. Following this, it performs a \textit{pitch key-point detection} and maps the pitch onto a \textit{2D Bird's Eye View}, generating tactical visualisations including offside lines and \textit{Voronoi-based heatmaps}. This section will delve into the design and behind-the-scenes of this system. 
+
+\subsection{Design Inspirations}
+
+The development of this system drew inspiration from a range of different existing works and tools across the sports analytics and computer vision landscape. Specifically, the model architecture and methodology were influenced by:
+
+\begin{itemize}
+    \item \textbf{Player Tracking in Ice Hockey}: Insights were taken from the player detection methods and homography applied in Yerassyl Kutylbek’s project.~\cite{kutylbek2024tracking}.
+    
+    \item \textbf{Tactical Football Analysis}: Taran Patel’s work on football footage analysis contributed ideas for the improvement of tracking and team classification robustness via the history mechanisms~\cite{patel2024tracking}.
+    
+    \item \textbf{Volleyball Analytics System}: Techniques from David Paulinus’s volleyball tracking system, such as top-down court transformations using detected key-points and homography, inspired the design of some components of the system~\cite{paulinus2024tracking}.
+
+    \item \textbf{Roboflow Sports Models}: The \texttt{sports} library by Roboflow provided valuable foundations for player detection, classification and tracking. Th project also drew inspiration from its homography techniques~\cite{roboflowCode}.
+\end{itemize}
+
+These references collectively informed the system’s design, ensuring that it integrates the best practices across the different components; detection, tracking, team classification, spatial transformation, and video annotation workflows.
+
+
+\subsection{System Overview}
+
+The system's overall core pipeline is listed below:
+
+\begin{itemize}
+    \item \textbf{Object Detection} for players, referees, ball, and goalkeepers using a Roboflow-trained \textit{YOLOv8-X} model. 
+    \item \textbf{Key-point Detection} for the pitch using a Roboflow-trained \textit{YOLOv8-X} model.
+    \item \textbf{Player Tracking} using \textit{ByteTrack} for fast and ID-consistent association.
+    \item \textbf{Team Classification} using \textit{SigLIP embeddings}, followed by \textit{UMAP} for dimensionality reduction, and finally \textit{K-Means Clustering} for segmentation.
+    \item \textbf{Pitch Homography} for transforming detections into top-down coordinates.
+    \item \textbf{Tactical Annotation }including offside detection, player possession, distance and speed estimation, and Voronoi heatmaps.
+\end{itemize}
+
+% Each of these modules are implemented either as a class or as a stand-alone utility to facilitate modularity and pipeline integration.
